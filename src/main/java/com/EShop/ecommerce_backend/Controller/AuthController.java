@@ -1,0 +1,67 @@
+package com.EShop.ecommerce_backend.Controller;
+
+
+
+//import com.EShop.ecommerce_backend.Configuration.AppConstants;
+import com.EShop.ecommerce_backend.Security.Login.LoginRequest;
+import com.EShop.ecommerce_backend.Security.Login.SignupRequest;
+import com.EShop.ecommerce_backend.Security.Response.MessageResponse;
+import com.EShop.ecommerce_backend.Service.AuthService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/auth")
+public class AuthController {
+
+    @Autowired
+    AuthService authService;
+
+    @PostMapping("/signin")
+    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
+        return authService.login(loginRequest);
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
+        return authService.register(signUpRequest);
+    }
+    @GetMapping("/username")
+    public String getCurrUserName(Authentication authentication) {
+        if(authentication!=null){
+            return authentication.getName();
+        }
+        else{
+            return "";
+        }
+    }
+    @GetMapping("/user")
+    public ResponseEntity<?> getUserDetails(Authentication authentication) {
+        return authService.getUserDetail(authentication);
+    }
+    @PostMapping("/signout")
+    public ResponseEntity<?> signOutUser () {
+        ResponseCookie cookie= authService.logoutUser();
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,
+                        cookie.toString())
+                .body(new MessageResponse("You've been signed out!"));
+    }
+
+//    @GetMapping("/seller")
+//    public ResponseEntity<?> getAllSeller(
+//            @RequestParam(name = "pageNumber" , defaultValue = AppConstants.Page_Number, required = false) Integer pageNumber
+//    ) {
+//        Sort sortByAndOrder=Sort.by(AppConstants.SORT_USERS_BY).descending();
+//        Pageable pageDetails= PageRequest.of(pageNumber,Integer.parseInt(AppConstants.Page_Size),sortByAndOrder);
+//        return ResponseEntity.ok(authService.getAllSellers(pageDetails));
+//    }
+
+}
