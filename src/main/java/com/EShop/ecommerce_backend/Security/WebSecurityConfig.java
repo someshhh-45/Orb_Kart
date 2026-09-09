@@ -71,30 +71,30 @@ public class WebSecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
         http.csrf(csrf -> csrf.disable())
                 .cors(cors -> {})
-                .exceptionHandling(exception ->
-                        exception.authenticationEntryPoint(unauthorizedHandler))
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth ->
-                        auth
-                                .requestMatchers("/api/auth/**").permitAll()
-                                .requestMatchers("/error").permitAll()
+                        auth.requestMatchers("/api/auth/**").permitAll()
                                 .requestMatchers("/v3/api-docs/**").permitAll()
+                                .requestMatchers("/h2-console/**").permitAll()
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                                .requestMatchers("/api/seller/**").hasAnyRole("ADMIN", "SELLER")
+                                .requestMatchers("/api/seller/**").hasAnyRole("ADMIN","SELLER")
                                 .requestMatchers("/api/public/**").permitAll()
+                                .requestMatchers("/swagger-ui/**").permitAll()
+                                .requestMatchers("/api/test/**").permitAll()
+                                .requestMatchers("/images/**").permitAll()
+                                .requestMatchers("/api/carts/**").permitAll()
+                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .anyRequest().authenticated()
                 );
 
         http.authenticationProvider(authenticationProviderBean());
 
-        http.addFilterBefore(
-                authTokenFilter,
-                UsernamePasswordAuthenticationFilter.class
-        );
+        http.addFilterBefore(authTokenFilterBean(), UsernamePasswordAuthenticationFilter.class);
+        http.headers(headers -> headers.frameOptions(
+                frameOptions -> frameOptions.sameOrigin()));
 
         return http.build();
     }
