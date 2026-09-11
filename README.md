@@ -20,7 +20,7 @@ OrbKart is a robust backend for a modern e-commerce platform. This system featur
 ---
 
 ## Getting Started
-git clone (https://github.com/Aryanyadav99/OrbKart_Backend.git)
+
 
 cd orbkart-backend
 
