@@ -1,16 +1,14 @@
 package com.EShop.ecommerce_backend.Security;
 
-
 import com.EShop.ecommerce_backend.Model.AppRole;
 import com.EShop.ecommerce_backend.Model.Role;
 import com.EShop.ecommerce_backend.Model.User;
 import com.EShop.ecommerce_backend.Repositories.RoleRepository;
 import com.EShop.ecommerce_backend.Repositories.UserRepository;
-
-import com.EShop.ecommerce_backend.Security.Services.UserDetailsServiceImpl;
 import com.EShop.ecommerce_backend.Security.JWT.AuthEntryPointJwt;
 import com.EShop.ecommerce_backend.Security.JWT.AuthTokenFilter;
 import com.EShop.ecommerce_backend.Security.Services.UserDetailsServiceImpl;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -20,18 +18,17 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsPasswordService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.util.Set;
-
 @Configuration
 @EnableWebSecurity
 //@EnableMethodSecurity
@@ -42,18 +39,13 @@ public class WebSecurityConfig {
     @Autowired
     private AuthEntryPointJwt unauthorizedHandler;
 
-    @Bean
-    public AuthTokenFilter authTokenFilterBean() {
-        return new AuthTokenFilter();
-    }
-    @Bean
-    public ModelMapper modelMapper() {
-        return new ModelMapper();
-    }
-    @Bean
+    @Autowired
+    private AuthTokenFilter authTokenFilter;
 
+    @Bean
 
     public DaoAuthenticationProvider authenticationProviderBean() {
+
         DaoAuthenticationProvider authProvider =
                 new DaoAuthenticationProvider(userDetailsService);
 
@@ -66,21 +58,23 @@ public class WebSecurityConfig {
     public AuthenticationManager authenticationManagerBean(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
-    @Autowired
-    private AuthTokenFilter authTokenFilter;
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
         http.csrf(csrf -> csrf.disable())
                 .cors(cors -> {})
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exception ->
+                        exception.authenticationEntryPoint(unauthorizedHandler))
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/api/auth/**").permitAll()
                                 .requestMatchers("/v3/api-docs/**").permitAll()
                                 .requestMatchers("/h2-console/**").permitAll()
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                                .requestMatchers("/api/seller/**").hasAnyRole("ADMIN","SELLER")
+                                .requestMatchers("/api/seller/**")
+                                .hasAnyRole("ADMIN", "SELLER")
                                 .requestMatchers("/api/public/**").permitAll()
                                 .requestMatchers("/swagger-ui/**").permitAll()
                                 .requestMatchers("/api/test/**").permitAll()
@@ -92,9 +86,10 @@ public class WebSecurityConfig {
 
         http.authenticationProvider(authenticationProviderBean());
 
-        http.addFilterBefore(authTokenFilterBean(), UsernamePasswordAuthenticationFilter.class);
-        http.headers(headers -> headers.frameOptions(
-                frameOptions -> frameOptions.sameOrigin()));
+        http.addFilterBefore(
+                authTokenFilter,
+                UsernamePasswordAuthenticationFilter.class
+        );
 
         return http.build();
     }
@@ -173,5 +168,4 @@ public class WebSecurityConfig {
     }
 
 }
-
 
